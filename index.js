@@ -6,17 +6,15 @@ const fetch = require('node-fetch')
 // Main game
 async function main() {
   // traverse graph
+  // let res = await callEndpoint('move', 'post', { direction: 'w' })
   let res = await callEndpoint('init', 'get')
   let cooldown = res.cooldown * 1000
 
   // take all treasures, if available
   if (res.items && res.items.length) {
     for (let item of res.items) {
-      setTimeout(async function() {
-        res = await callEndpoint('take', 'post', { name: `${item}` })
-        cooldown = res.cooldown * 1000
-        console.log(res)
-      }, cooldown)
+      // cooldown before picking up each treasure
+      waitToCooldown(cooldown, 'take', 'post', { name: item })
     }
   }
 }
@@ -38,6 +36,14 @@ async function callEndpoint(endpoint, method, data) {
   } catch (err) {
     console.error(err)
   }
+}
+
+function waitToCooldown(cooldown, endpoint, method, data) {
+  setTimeout(async function() {
+    let res = await callEndpoint(endpoint, method, data)
+    cooldown = res.cooldown * 1000
+    console.log(res)
+  }, cooldown)
 }
 
 main()
