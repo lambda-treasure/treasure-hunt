@@ -264,8 +264,6 @@ Formatting is very important for these commands: next_room_ids must match every 
 
 Once you acquire your true name, you may mine for Lambda Coins using the following API endpoints:
 
-:
-
 
 ## Mine
 Submit a proposed proof and your game token to this endpoint to attempt to mine a block.  If successful, you will receive a Lambda Coin.
@@ -316,4 +314,3 @@ You can spend your Lambda Coins to transform items into powerful equipment at th
 `
 curl -X POST -H 'Authorization: Token 7a375b52bdc410eebbc878ed3e58b2e94a8cb607' -H "Content-Type: application/json" -d '{"name":"[NAME OF ITEM]"}' https://lambda-treasure-hunt.herokuapp.com/api/adv/transmogrify/
 `
-
