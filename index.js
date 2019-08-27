@@ -83,7 +83,7 @@ function bfs(dictionary, room) {
 async function callEndpointAfterCD(endpoint, method, data) {
   try {
     let res = await fetch(
-      `https://lambda-treasure-hunt.herokuapp.com/api/adv/${endpoint}/`,
+      `https://lambda-treasure-hunt.herokuapp.com/api/${endpoint}/`,
       {
         method: `${method}`,
         headers: { Authorization: `Token ${process.env.TOKEN}` },
@@ -180,32 +180,40 @@ async function main() {
 
   // traverse graph
   //   let current_room = await callEndpointAfterCD('move', 'post', { direction: 'w' })
-  let current_room = await callEndpointAfterCD('init', 'get')
+  let current_room = await callEndpointAfterCD('adv/init', 'get')
 
-  const player = await callEndpointAfterCD('status', 'post')
+  const player = await callEndpointAfterCD('adv/status', 'post')
 
   // take all treasures, if available
   if (current_room.items.length) {
     for (let item of current_room.items) {
-      await callEndpointAfterCD('take', 'post', { name: item })
+      await callEndpointAfterCD('adv/take', 'post', { name: item })
     }
   }
 
   // sell all treasures, if player is at a shop
-  if (current_room.title === 'Shop' && parseInt(player.encumbrance)) {
+  if (current_room.title === 'Shop') {
     for (let i = 0; i < parseInt(player.encumbrance); i++) {
-      await callEndpointAfterCD('sell', 'post', {
+      await callEndpointAfterCD('adv/sell', 'post', {
         name: 'treasure',
         confirm: 'yes'
       })
     }
   }
+
+   // purchase new name, if player is at Pirate Ry's and has at least 1000 gold
+   if (
+    current_room.title.includes('Pirate Ry') &&
+    parseInt(player.gold) >= 1000
+  ) {
+    await callEndpointAfterCD('adv/change_name', 'post', { name: 'divya-ben' })
+  }
 }
 
 main()
 
-// callEndpointAfterCD('status', 'post')
-// callEndpointAfterCD('init', 'get')
-// callEndpointAfterCD('move', 'post', { direction: 'e' })
-// callEndpointAfterCD('take', 'post', { name: 'tiny treasure' })
-// callEndpointAfterCD('sell', 'post', { name: 'treasure', confirm: 'yes' })
+// callEndpointAfterCD('adv/status', 'post')
+// callEndpointAfterCD('adv/init', 'get')
+// callEndpointAfterCD('adv/move', 'post', { direction: 'e' })
+// callEndpointAfterCD('adv/take', 'post', { name: 'tiny treasure' })
+// callEndpointAfterCD('adv/sell', 'post', { name: 'treasure', confirm: 'yes' })
