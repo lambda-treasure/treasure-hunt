@@ -134,7 +134,7 @@ async function main() {
         }
       };
     };
-    console.log("The Visited Object is: " + JSON.stringify(visited));
+    console.log("The Visited Object is:  " + JSON.stringify(visited));
   }
 
 
