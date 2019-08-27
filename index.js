@@ -8,39 +8,6 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-class Queue {
-  constructor() {
-    this.queue = [];
-    this.enqueue = function (value) {
-      return this.queue.push(value)
-    };
-    this.dequeue = function () {
-      if (this.queue.length > 0) {
-        return this.queue.shift()
-      }
-      else {
-        return None
-      }
-    }
-    this.size = function () {
-      return this.queue.length
-    }
-  }
-};
-function enqueue(queue, value) {
-  return queue.push(value)
-};
-function dequeue(queue) {
-  if (queue.length > 0) {
-    return queue.shift()
-  }
-  else {
-    return None
-  }
-};
-function size(queue) {
-  return queue.length
-};
 
 function the_other_side(direction_traveled) {
   if (direction_traveled == 'n') {
@@ -55,44 +22,6 @@ function the_other_side(direction_traveled) {
   else if (direction_traveled == 'w') {
     return 'e'
   }
-}
-
-function bfs(dictionary, room) {
-  let bfs_visited = new Set();
-  // let q = new Queue();
-  queue = [];
-  let path = [room];
-  enqueue(queue, [room])
-  while (size(queue)) {
-    let placeholder = queue;
-    let v = placeholder[0];
-    if (v == '?') {
-      path = placeholder.slice(1);
-      break
-    }
-    if (!(v in bfs_visited)) {
-      bfs_visited.add(v);
-      let keys = Object.keys(dictionary[v])
-      for (let key of keys) {
-        let node = dictionary[v][key];
-        let c = placeholder.slice();
-        c.unshift(node)
-        enqueue(queue, c)
-      };
-    };
-  };
-  let directions = [];
-  while (path.length > 1) {
-    let location = path.pop();
-    let new_keys = Object.keys(dictionary[location]);
-    for (let key of new_keys) {
-      if (dictionary[location][key] == path[path.length - 1]) {
-        directions.push(key);
-      }
-    };
-  };
-  return directions
-
 }
 
 
@@ -121,11 +50,11 @@ async function main() {
   let traveled = [];
   let visited = {}
   console.log(Object.keys(visited).length + "-----------------------")
-  while (Object.keys(visited).length < 500) {
-    let current_room = await callEndpointAfterCD('init', 'get')
+  while (Object.keys(visited).length <= 500) {
+    let current_room = await callEndpointAfterCD('adv/init', 'get')
 
     let this_room_id = current_room.room_id;
-    traveled.push(this_room_id);
+    if (traveled[traveled.length - 1] != this_room_id) { traveled.push(this_room_id) };
     console.log("THIS IS THE ROUTE YOU ARE WORKING ON!!!!!" + traveled);
     if (!(this_room_id in visited)) {
       visited[this_room_id] = {};
@@ -166,7 +95,7 @@ async function main() {
       let direction = unexplored[(Math.floor(Math.random() * unexplored.length))];
       //-----------------------------------------------------
       // REQUEST TO TRAVEL IN THAT DIRECTION
-      let new_current_room = await callEndpointAfterCD('move', 'post', { "direction": direction })
+      let new_current_room = await callEndpointAfterCD('adv/move', 'post', { "direction": direction })
 
 
       //-----------------------------------------------------
@@ -200,7 +129,7 @@ async function main() {
 
       for (x in visited[this_room_id]) {
         if (visited[this_room_id][x] == backwards_movement) {
-          await callEndpointAfterCD('move', 'post', { "direction": x, "next_room_id": backwards_movement })
+          await callEndpointAfterCD('adv/move', 'post', { "direction": x, "next_room_id": JSON.stringify(backwards_movement) })
           console.log("===============> YOU ARE A VERY WISE TRAVELLER INDEED! <======================")
         }
       };
@@ -237,8 +166,8 @@ async function main() {
     }
   }
 
-   // purchase new name, if player is at Pirate Ry's and has at least 1000 gold
-   if (
+  // purchase new name, if player is at Pirate Ry's and has at least 1000 gold
+  if (
     current_room.title.includes('Pirate Ry') &&
     parseInt(player.gold) >= 1000
   ) {
