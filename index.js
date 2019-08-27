@@ -3,24 +3,12 @@
 require('dotenv').config()
 const fetch = require('node-fetch')
 
-// Main game
-async function main() {
-  // traverse graph
-  // let res = await callEndpoint('move', 'post', { direction: 'w' })
-  let res = await callEndpoint('init', 'get')
-  let cooldown = res.cooldown * 1000
-
-  // take all treasures, if available
-  if (res.items && res.items.length) {
-    for (let item of res.items) {
-      // cooldown before picking up each treasure
-      waitToCooldown(cooldown, 'take', 'post', { name: item })
-    }
-  }
+// Helper functions
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-// Helper functions
-async function callEndpoint(endpoint, method, data) {
+async function callEndpointAfterCD(endpoint, method, data) {
   try {
     let res = await fetch(
       `https://lambda-treasure-hunt.herokuapp.com/api/adv/${endpoint}/`,
@@ -31,6 +19,7 @@ async function callEndpoint(endpoint, method, data) {
       }
     )
     res = await res.json()
+    await sleep(res.cooldown * 1000)
     console.log(res)
     return res
   } catch (err) {
@@ -38,17 +27,36 @@ async function callEndpoint(endpoint, method, data) {
   }
 }
 
-function waitToCooldown(cooldown, endpoint, method, data) {
-  setTimeout(async function() {
-    let res = await callEndpoint(endpoint, method, data)
-    cooldown = res.cooldown * 1000
-    console.log(res)
-  }, cooldown)
+// Main game
+async function main() {
+  // traverse graph
+//   let current_room = await callEndpointAfterCD('move', 'post', { direction: 'w' })
+  let current_room = await callEndpointAfterCD('init', 'get')
+
+  const player = await callEndpointAfterCD('status', 'post')
+
+  // take all treasures, if available
+  if (current_room.items.length) {
+    for (let item of current_room.items) {
+      await callEndpointAfterCD('take', 'post', { name: item })
+    }
+  }
+
+  // sell all treasures, if player is at a shop
+  if (current_room.title === 'Shop' && parseInt(player.encumbrance)) {
+    for (let i = 0; i < parseInt(player.encumbrance); i++) {
+      await callEndpointAfterCD('sell', 'post', {
+        name: 'treasure',
+        confirm: 'yes'
+      })
+    }
+  }
 }
 
 main()
 
-// callEndpoint('status', 'post')
-// callEndpoint('init', 'get')
-// callEndpoint('move', 'post', { direction: 'e' })
-// callEndpoint('take', 'post', { name: 'tiny treasure' })
+// callEndpointAfterCD('status', 'post')
+// callEndpointAfterCD('init', 'get')
+// callEndpointAfterCD('move', 'post', { direction: 'e' })
+// callEndpointAfterCD('take', 'post', { name: 'tiny treasure' })
+// callEndpointAfterCD('sell', 'post', { name: 'treasure', confirm: 'yes' })
