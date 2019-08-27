@@ -200,6 +200,14 @@ async function main() {
       })
     }
   }
+
+  // purchase new name, if player is at Pirate Ry's and has at least 1000 gold
+  if (
+    current_room.title.includes('Pirate Ry') &&
+    parseInt(player.gold) >= 1000
+  ) {
+    await callEndpointAfterCD('change_name', 'post', { name: 'divya-ben' })
+  }
 }
 
 main()
