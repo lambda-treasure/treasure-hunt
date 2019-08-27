@@ -8,22 +8,38 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-function Queue() {
-  this.queue = [];
-  this.enqueue = function (value) {
-    return this.queue.append(value)
-  };
-  this.dequeue = function () {
-    if (this.queue.length > 0) {
-      return this.queue.shift()
+class Queue {
+  constructor() {
+    this.queue = [];
+    this.enqueue = function (value) {
+      return this.queue.push(value)
+    };
+    this.dequeue = function () {
+      if (this.queue.length > 0) {
+        return this.queue.shift()
+      }
+      else {
+        return None
+      }
     }
-    else {
-      return None
+    this.size = function () {
+      return this.queue.length
     }
   }
-  this.size = function () {
-    return this.queue.length
+};
+function enqueue(queue, value) {
+  return queue.push(value)
+};
+function dequeue(queue) {
+  if (queue.length > 0) {
+    return queue.shift()
   }
+  else {
+    return None
+  }
+};
+function size(queue) {
+  return queue.length
 };
 
 function the_other_side(direction_traveled) {
@@ -42,35 +58,36 @@ function the_other_side(direction_traveled) {
 }
 
 function bfs(dictionary, room) {
-  var bfs_visited = {};
-  var q = new Queue();
-  var path = [room];
-  q.enqueue([room])
-  while (q.size()) {
-    var placeholder = q.queue;
-    var v = placeholder[0];
+  let bfs_visited = new Set();
+  // let q = new Queue();
+  queue = [];
+  let path = [room];
+  enqueue(queue, [room])
+  while (size(queue)) {
+    let placeholder = queue;
+    let v = placeholder[0];
     if (v == '?') {
       path = placeholder.slice(1);
       break
     }
     if (!(v in bfs_visited)) {
-      bfs_visited.append(v);
-      var keys = Object.keys(dictionary[v])
+      bfs_visited.add(v);
+      let keys = Object.keys(dictionary[v])
       for (let key of keys) {
-        var node = dictionary[v][key];
-        var c = placeholder.slice();
+        let node = dictionary[v][key];
+        let c = placeholder.slice();
         c.unshift(node)
-        q.enqueue(c)
+        enqueue(queue, c)
       };
     };
   };
-  var directions = [];
+  let directions = [];
   while (path.length > 1) {
-    var location = path.pop();
-    var new_keys = Object.keys(dictionary[location]);
+    let location = path.pop();
+    let new_keys = Object.keys(dictionary[location]);
     for (let key of new_keys) {
       if (dictionary[location][key] == path[path.length - 1]) {
-        directions.append(key);
+        directions.push(key);
       }
     };
   };
@@ -99,19 +116,20 @@ async function callEndpointAfterCD(endpoint, method, data) {
   }
 }
 
-var traversalPath = []
-
 // Main game
 async function main() {
-  var visited = {}
+  let traveled = [];
+  let visited = {}
+  console.log(Object.keys(visited).length + "-----------------------")
+  while (Object.keys(visited).length < 500) {
+    let current_room = await callEndpointAfterCD('init', 'get')
 
-  while (visited.length < 500) {
-    // THIS WILL NEED TO BE WORKED ON
-    //------------------------------------------------------------
-    //NEED TO GET THE CURRENT ROOM INFORMATION 
-    var this_room_id = current_room.room_id;
+    let this_room_id = current_room.room_id;
+    traveled.push(this_room_id);
+    console.log("THIS IS THE ROUTE YOU ARE WORKING ON!!!!!" + traveled);
     if (!(this_room_id in visited)) {
       visited[this_room_id] = {};
+      console.log(visited);
       //----------------------------------------------------------
       // NOT SURE IF THIS WILL SET UP THE CORRECT KEY: VALUE PAIR
       /* THIS IS THE PYTHON VERSION:  AFTER IS MY ATTEMPT TO CONVERT TO JAVASCRIPT
@@ -124,25 +142,40 @@ async function main() {
         visited[this_room_id][current_room.exits[i]] = '?'
       };
     };
-    var unexplored = [];
+
+    let unexplored = [];
     //-----------------------------------------------------
     // FOR EACH OF THE EXIT DIRECTIONS IN THE CURRENT ROOM, IF IT IS A '?' (meaning unexplored) ADD IT TO THE UNEXPLORED ARRAY.  
     // WE WILL RANDOMLY SELECT ONE OF THESE IN THE NEXT STEP.
     /* THIS IS THE PYTHON VERSION
      unexplored = [direction for direction in visited[room]
                 if visited[room][direction] == '?']  */
+    let current_exits = visited[this_room_id];
+    console.log("------ Current exits for this room are: " + JSON.stringify(current_exits));
+
+    for (x in visited[this_room_id]) {
+      if (visited[this_room_id][x] == '?') {
+        unexplored.push(x);
+      };
+    };
+    console.log("THIS IS THE UNEXPLORED!!!!!  " + unexplored);
+
+
+
     if (unexplored.length > 0) {
-      var direction = unexplored[(Math.floor(Math.random() * unexplored.length))];
+      let direction = unexplored[(Math.floor(Math.random() * unexplored.length))];
       //-----------------------------------------------------
       // REQUEST TO TRAVEL IN THAT DIRECTION
-      player.travel(direction);
-      traversalPath.append(direction);
+      let new_current_room = await callEndpointAfterCD('move', 'post', { "direction": direction })
+
+
       //-----------------------------------------------------
-      // need to get the new current_room_id
-      var new_room_id = current_room.room_id;
+      // need to get the new new_current_room_id
+      let new_room_id = new_current_room.room_id;
+      console.log("=======> NEW ROOM ID IS:  " + new_room_id + "<===========")
       visited[this_room_id][direction] = new_room_id;
       if (!(new_room_id in visited)) {
-        visited[this_room_id] = {};
+        visited[new_room_id] = {};
         //-----------------------------------------------------
         // NOT SURE IF THIS WILL SET UP THE CORRECT KEY: VALUE PAIR
         /* THIS IS THE PYTHON VERSION:  AFTER IS MY ATTEMPT TO CONVERT TO JAVASCRIPT
@@ -151,26 +184,28 @@ async function main() {
               direction: '?' for direction in player.currentRoom.getExits()}
         */
 
-        for (i = 0; i < current_room.exits.length; i++) {
-          visited[this_room_id][current_room.exits[i]] = '?'
+        for (i = 0; i < new_current_room.exits.length; i++) {
+          visited[new_room_id][new_current_room.exits[i]] = '?'
         };
       };
-      var op_dir = the_other_side(direction)
+      let op_dir = the_other_side(direction)
       visited[new_room_id][op_dir] = this_room_id
     }
     else {
       // generate a list of directions to get to the nearest unexplored node using a BFS, 
       // loop through and send the player in those directions in order.
 
-      var directions = bfs(visited, this_room_id)
-      traversalPath = traversalPath + directions
+      traveled.pop()
+      let backwards_movement = traveled[traveled.length - 1]
 
-      directions.forEach(
-        //----------------------------------------------------------------
-        // MAKE A REQUEST AND TRAVEL IN EACH OF THE DIRECTIONS
-
-      )
-    }
+      for (x in visited[this_room_id]) {
+        if (visited[this_room_id][x] == backwards_movement) {
+          await callEndpointAfterCD('move', 'post', { "direction": x, "next_room_id": backwards_movement })
+          console.log("===============> YOU ARE A VERY WISE TRAVELLER INDEED! <======================")
+        }
+      };
+    };
+    console.log("The Visited Object is: " + JSON.stringify(visited));
   }
 
 
@@ -183,6 +218,7 @@ async function main() {
   let current_room = await callEndpointAfterCD('adv/init', 'get')
 
   const player = await callEndpointAfterCD('adv/status', 'post')
+
 
   // take all treasures, if available
   if (current_room.items.length) {
