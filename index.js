@@ -53,7 +53,17 @@ async function main() {
   while (Object.keys(visited).length <= 500) {
     console.log(`📏 Visited length: ${Object.keys(visited).length} \n`)
 
+    const player = await callEndpointAfterCD('adv/status', 'post')
+
     let current_room = await callEndpointAfterCD('adv/init', 'get')
+
+    // take all room treasures, if available and player not at max capacity
+    if (current_room.items.length && player.encumbrance < player.strength) {
+      for (let item of current_room.items) {
+        await callEndpointAfterCD('adv/take', 'post', { name: item })
+        console.log(`💸 Treasure collected \n`)
+      }
+    }
 
     let this_room_id = current_room.room_id
     if (traveled[traveled.length - 1] != this_room_id) {
@@ -94,6 +104,14 @@ async function main() {
         direction: direction
       })
 
+      // take all room treasures, if available and player not at max capacity
+      if (current_room.items.length && player.encumbrance < player.strength) {
+        for (let item of current_room.items) {
+          await callEndpointAfterCD('adv/take', 'post', { name: item })
+          console.log(`💰 Treasure collected \n`)
+        }
+      }
+
       let new_room_id = new_current_room.room_id
       console.log(`🎁 New room ID: ${new_room_id} \n`)
 
@@ -123,34 +141,29 @@ async function main() {
             direction: x,
             next_room_id: JSON.stringify(backwards_movement)
           })
-          console.log(`🧠 Wise traveler \n`)
+          console.log(`🧠  Wise traveler \n`)
+
+          // take all room treasures, if available and player not at max capacity
+          if (
+            current_room.items.length &&
+            player.encumbrance < player.strength
+          ) {
+            for (let item of current_room.items) {
+              await callEndpointAfterCD('adv/take', 'post', { name: item })
+              console.log(`💰 Treasure collected \n`)
+            }
+          }
         }
       }
     }
 
     console.log(`👀 Visited object: ${JSON.stringify(visited)} \n`)
-    // fs.appendFile('map.txt', JSON.stringify(visited), function(err) {
-    //   if (err) throw err
-    //   console.log('🔨 File saved! \n')
-    // })
   }
 
   fs.appendFile('map.json', JSON.stringify(visited), function(err) {
     if (err) throw err
+    console.log('🔨 File saved! \n')
   })
-
-  // traverse graph
-  //   let current_room = await callEndpointAfterCD('move', 'post', { direction: 'w' })
-  // let current_room = await callEndpointAfterCD('adv/init', 'get')
-
-  // const player = await callEndpointAfterCD('adv/status', 'post')
-
-  // take all treasures, if available
-  // if (current_room.items.length) {
-  //   for (let item of current_room.items) {
-  //     await callEndpointAfterCD('adv/take', 'post', { name: item })
-  //   }
-  // }
 
   // sell all treasures, if player is at a shop
   // if (current_room.title === 'Shop') {
