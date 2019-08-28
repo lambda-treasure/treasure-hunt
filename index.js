@@ -84,10 +84,12 @@ async function main() {
 
     if (current_room.title.includes('Pirate Ry')) {
       await storage.setItem(`Pirate-Room-ID`, this_room_id)
+      console.log(`💖 Pirate Ry room #: ${this_room_id}`)
     }
 
     if (current_room.title.includes('Shop')) {
       await storage.setItem(`Shop-Room-ID`, this_room_id)
+      console.log(`💖 Shop room #: ${this_room_id}`)
     }
 
     if (!(this_room_id in visited)) {
@@ -171,7 +173,6 @@ async function main() {
             direction: x,
             next_room_id: JSON.stringify(backwards_movement)
           })
-          console.log(`🧠  Wise traveler \n`)
 
           // take all room treasures, if available and player not at max capacity
           if (
@@ -189,16 +190,7 @@ async function main() {
     }
 
     await storage.setItem(`${process.env.NAME}'s-map`, visited)
-    console.log(
-      '👀 Visited storage: ' +
-        JSON.stringify(await storage.getItem(`${process.env.NAME}'s-map`))
-    )
-
     await storage.setItem(`${process.env.NAME}'s-traveled`, traveled)
-    console.log(
-      '👀 Traveled left: ' +
-        JSON.stringify(await storage.getItem(`${process.env.NAME}'s-traveled`))
-    )
   }
 }
 
