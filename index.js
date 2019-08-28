@@ -58,7 +58,6 @@ async function main() {
     console.log(`🚧 Working on route: ${traveled} \n`)
     if (!(this_room_id in visited)) {
       visited[this_room_id] = {}
-      console.log(visited)
 
       for (let i = 0; i < current_room.exits.length; i++) {
         visited[this_room_id][current_room.exits[i]] = '?'
@@ -123,11 +122,14 @@ async function main() {
     }
 
     console.log(`👀 Visited object: ${JSON.stringify(visited)}`)
+    fs.appendFile('map.txt', JSON.stringify(visited), function(err) {
+      if (err) throw err
+      console.log('🔨 File saved! \n')
+    })
   }
 
   fs.appendFile('map.json', JSON.stringify(visited), function(err) {
     if (err) throw err
-    console.log('Saved! \n')
   })
 
   // traverse graph
