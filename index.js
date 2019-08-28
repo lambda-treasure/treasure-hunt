@@ -1,4 +1,9 @@
-// Run `node index.js` in your terminal
+/* 
+In your terminal, install packages and run the code:
+
+yarn install
+node index.js
+*/
 
 require('dotenv').config()
 const fetch = require('node-fetch')
