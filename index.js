@@ -55,7 +55,25 @@ async function callEndpointAfterCD(endpoint, method, data) {
 
 // Main game
 async function main() {
-  await storage.init();
+  await storage.init({
+    dir: 'relative/path/to/persist',
+
+    stringify: JSON.stringify,
+
+    parse: JSON.parse,
+
+    encoding: 'utf8',
+
+    logging: false,  // can also be custom logging function
+
+    ttl: false, // ttl* [NEW], can be true for 24h default or a number in MILLISECONDS or a valid Javascript Date object
+
+    expiredInterval: 2 * 60 * 1000, // every 2 minutes the process will clean-up the expired cache
+
+    // in some cases, you (or some other service) might add non-valid storage files to your
+    // storage dir, i.e. Google Drive, make this true if you'd like to ignore these files and not throw an error
+    forgiveParseErrors: false
+  });
   if (!(await storage.getItem(`${process.env.NAME}'s-traveled`))) {
     await storage.setItem(`${process.env.NAME}'s-traveled`, []);
   }
@@ -73,7 +91,9 @@ async function main() {
     let current_room = await callEndpointAfterCD('adv/init', 'get')
 
     // take all room treasures, if available and player not at max capacity
-    if (current_room.items.length && player.encumbrance < player.strength) {
+    if (current_room.items.length
+      && player.encumbrance < player.strength && parseInt(player.gold) <= 1000
+    ) {
       for (let item of current_room.items) {
         await callEndpointAfterCD('adv/take', 'post', { name: item })
         console.log(`💸 Treasure collected \n`)
@@ -81,9 +101,7 @@ async function main() {
     }
 
     let this_room_id = current_room.room_id
-    if (traveled[traveled.length - 1] != this_room_id) {
-      traveled.push(this_room_id)
-    };
+
     if (current_room.title.includes('Pirate Ry')) {
       await storage.setItem(`Pirate-Room-ID`, this_room_id);
     }
@@ -91,9 +109,8 @@ async function main() {
       await storage.setItem(`Shop-Room-ID`, this_room_id);
     }
 
-    console.log(`🚧 Working on route: ${traveled} \n`)
     if (!(this_room_id in visited)) {
-      visited[this_room_id] = { title: current_room.title }
+      visited[this_room_id] = {}
 
 
       for (i = 0; i < current_room.exits.length; i++) {
@@ -111,6 +128,7 @@ async function main() {
     let unexplored = []
 
     let current_exits = visited[this_room_id]
+    await storage.setItem(`${process.env.NAME}'s-map`, visited);
     console.log(`🚪 Current room exits: ${JSON.stringify(current_exits)} \n`)
 
     for (x in visited[this_room_id]) {
@@ -127,13 +145,13 @@ async function main() {
       //-----------------------------------------------------
       // REQUEST TO TRAVEL IN THAT DIRECTION
       let new_current_room = await callEndpointAfterCD('adv/move', 'post', { "direction": direction })
+      if (traveled[traveled.length - 1] != this_room_id) {
+        traveled.push(this_room_id);
+      };
+      await storage.setItem(`${process.env.NAME}'s-traveled`, traveled);
+      console.log(`🚧 Working on route: ${traveled} \n`)
 
-      if (current_room.items.length && player.encumbrance < player.strength) {
-        for (let item of current_room.items) {
-          await callEndpointAfterCD('adv/take', 'post', { name: item })
-          console.log(`💰 Treasure collected \n`)
-        }
-      }
+
       //-----------------------------------------------------
       // need to get the new new_current_room_id
       let new_room_id = new_current_room.room_id;
@@ -155,13 +173,23 @@ async function main() {
       };
       let op_dir = the_other_side(direction)
       visited[new_room_id][op_dir] = this_room_id
+      await storage.setItem(`${process.env.NAME}'s-map`, visited);
+
+      if (current_room.items.length
+        && player.encumbrance < player.strength && parseInt(player.gold) <= 1000
+      ) {
+        for (let item of current_room.items) {
+          await callEndpointAfterCD('adv/take', 'post', { name: item })
+          console.log(`💰 Treasure collected \n`)
+        }
+      }
     }
     else {
       // generate a list of directions to get to the nearest unexplored node using a BFS, 
       // loop through and send the player in those directions in order.
 
-      traveled.pop()
-      let backwards_movement = traveled[traveled.length - 1]
+
+      let backwards_movement = traveled.pop()
 
       for (x in visited[this_room_id]) {
         if (visited[this_room_id][x] === backwards_movement) {
@@ -173,8 +201,8 @@ async function main() {
 
           // take all room treasures, if available and player not at max capacity
           if (
-            current_room.items.length &&
-            player.encumbrance < player.strength
+            current_room.items.length
+            && player.encumbrance < player.strength && parseInt(player.gold) <= 1000
           ) {
             for (let item of current_room.items) {
               await callEndpointAfterCD('adv/take', 'post', { name: item })
