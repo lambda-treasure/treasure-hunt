@@ -93,7 +93,7 @@ async function main() {
     if (!(this_room_id in visited)) {
       visited[this_room_id] = {}
 
-      for (i = 0; i < current_room.exits.length; i++) {
+      for (let i = 0; i < current_room.exits.length; i++) {
         visited[this_room_id][current_room.exits[i]] = '?'
       }
     }
@@ -138,7 +138,7 @@ async function main() {
       if (!(new_room_id in visited)) {
         visited[new_room_id] = {}
 
-        for (i = 0; i < new_current_room.exits.length; i++) {
+        for (let i = 0; i < new_current_room.exits.length; i++) {
           visited[new_room_id][new_current_room.exits[i]] = '?'
         }
       }
