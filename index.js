@@ -49,7 +49,6 @@ function the_other_side(direction_traveled) {
 async function main() {
   let traveled = []
   let visited = {}
-  let unexplored = []
 
   console.log(`📏 Visited length: ${Object.keys(visited).length} \n`)
   while (Object.keys(visited).length <= 500) {
@@ -73,6 +72,8 @@ async function main() {
     - If each exit directions in the current room is '?' (i.e. unexplored), add it to unexplored array
     - Then, randomly select one in the next step
     */
+
+    let unexplored = []
 
     let current_exits = visited[this_room_id]
     console.log(`🚪 Current room exits: ${JSON.stringify(current_exits)} \n`)
