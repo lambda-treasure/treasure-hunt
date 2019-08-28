@@ -166,7 +166,7 @@ async function main() {
     current_room.title.includes('Pirate Ry') &&
     parseInt(player.gold) >= 1000
   ) {
-    await callEndpointAfterCD('adv/change_name', 'post', { name: 'divya-ben' })
+    await callEndpointAfterCD('adv/change_name', 'post', { name: process.env.NAME })
   }
 }
 
