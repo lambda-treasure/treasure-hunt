@@ -2,6 +2,7 @@
 
 require('dotenv').config()
 const fetch = require('node-fetch')
+const fs = require('fs')
 
 // Helper functions
 function sleep(ms) {
@@ -45,7 +46,7 @@ async function main() {
   let visited = {}
   let unexplored = []
 
-  console.log(Object.keys(visited).length + '-----------------------')
+  console.log(`📏 Visited length: ${Object.keys(visited).length} \n`)
   while (Object.keys(visited).length <= 500) {
     let current_room = await callEndpointAfterCD('adv/init', 'get')
 
@@ -54,7 +55,7 @@ async function main() {
       traveled.push(this_room_id)
     }
 
-    console.log('THIS IS THE ROUTE YOU ARE WORKING ON!!!!!' + traveled)
+    console.log(`🚧 Working on route: ${traveled} \n`)
     if (!(this_room_id in visited)) {
       visited[this_room_id] = {}
       console.log(visited)
@@ -70,16 +71,14 @@ async function main() {
     */
 
     let current_exits = visited[this_room_id]
-    console.log(
-      '------ Current exits for this room are: ' + JSON.stringify(current_exits)
-    )
+    console.log(`🚪 Current room exits: ${JSON.stringify(current_exits)} \n`)
 
     for (x in visited[this_room_id]) {
       if (visited[this_room_id][x] === '?') {
         unexplored.push(x)
       }
     }
-    console.log('THIS IS THE UNEXPLORED!!!!!  ' + unexplored)
+    console.log(`🌎 Unexplored exits: ${unexplored} \n`)
 
     if (unexplored.length) {
       let direction = unexplored[Math.floor(Math.random() * unexplored.length)]
@@ -90,7 +89,7 @@ async function main() {
       })
 
       let new_room_id = new_current_room.room_id
-      console.log('=======> NEW ROOM ID IS:  ' + new_room_id + '<===========')
+      console.log(`🎁 New room ID: ${new_room_id} \n`)
 
       visited[this_room_id][direction] = new_room_id
       if (!(new_room_id in visited)) {
@@ -118,14 +117,18 @@ async function main() {
             direction: x,
             next_room_id: JSON.stringify(backwards_movement)
           })
-          console.log(
-            '===============> YOU ARE A VERY WISE TRAVELLER INDEED! <======================'
-          )
+          console.log(`🧠 Wise traveler \n`)
         }
       }
     }
-    console.log('The Visited Object is:  ' + JSON.stringify(visited))
+
+    console.log(`👀 Visited object: ${JSON.stringify(visited)}`)
   }
+
+  fs.appendFile('map.json', JSON.stringify(visited), function(err) {
+    if (err) throw err
+    console.log('Saved! \n')
+  })
 
   // traverse graph
   //   let current_room = await callEndpointAfterCD('move', 'post', { direction: 'w' })
