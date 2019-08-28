@@ -48,13 +48,17 @@ function the_other_side(direction_traveled) {
 // Main game
 async function main() {
   await storage.init()
+
   if (!(await storage.getItem(`${process.env.NAME}'s-traveled`))) {
     await storage.setItem(`${process.env.NAME}'s-traveled`, [])
   }
+
   let traveled = await storage.getItem(`${process.env.NAME}'s-traveled`)
+
   if (!(await storage.getItem(`${process.env.NAME}'s-map`))) {
     await storage.setItem(`${process.env.NAME}'s-map`, {})
   }
+
   let visited = await storage.getItem(`${process.env.NAME}'s-map`)
 
   while (Object.keys(visited).length <= 500) {
@@ -81,6 +85,7 @@ async function main() {
     if (current_room.title.includes('Pirate Ry')) {
       await storage.setItem(`Pirate-Room-ID`, this_room_id)
     }
+
     if (current_room.title.includes('Shop')) {
       await storage.setItem(`Shop-Room-ID`, this_room_id)
     }
@@ -93,12 +98,10 @@ async function main() {
       }
     }
 
-    //-----------------------------------------------------
-    // FOR EACH OF THE EXIT DIRECTIONS IN THE CURRENT ROOM, IF IT IS A '?' (meaning unexplored) ADD IT TO THE UNEXPLORED ARRAY.
-    // WE WILL RANDOMLY SELECT ONE OF THESE IN THE NEXT STEP.
-    /* THIS IS THE PYTHON VERSION
-     unexplored = [direction for direction in visited[room]
-                if visited[room][direction] == '?']  */
+    /*
+    - If each exit directions in the current room is '?' (i.e. unexplored), add it to unexplored array
+    - Then, randomly select one in the next step
+    */
 
     let unexplored = []
 
@@ -111,40 +114,35 @@ async function main() {
         unexplored.push(x)
       }
     }
-    console.log('THIS IS THE UNEXPLORED!!!!!  ' + unexplored)
+    console.log(`🌎 Unexplored exits: ${unexplored} \n`)
 
     if (unexplored.length > 0) {
       let direction = unexplored[Math.floor(Math.random() * unexplored.length)]
-      //-----------------------------------------------------
-      // REQUEST TO TRAVEL IN THAT DIRECTION
+
+      // travel in a random direction
       let new_current_room = await callEndpointAfterCD('adv/move', 'post', {
         direction: direction
       })
+
       if (traveled[traveled.length - 1] != this_room_id) {
         traveled.push(this_room_id)
       }
+
       await storage.setItem(`${process.env.NAME}'s-traveled`, traveled)
       console.log(`🚧 Working on route: ${traveled} \n`)
 
-      //-----------------------------------------------------
-      // need to get the new new_current_room_id
       let new_room_id = new_current_room.room_id
-      console.log('=======> NEW ROOM ID IS:  ' + new_room_id + '<===========')
+      console.log(`🎁 New room ID: ${new_room_id} \n`)
+
       visited[this_room_id][direction] = new_room_id
       if (!(new_room_id in visited)) {
         visited[new_room_id] = {}
-        //-----------------------------------------------------
-        // NOT SURE IF THIS WILL SET UP THE CORRECT KEY: VALUE PAIR
-        /* THIS IS THE PYTHON VERSION:  AFTER IS MY ATTEMPT TO CONVERT TO JAVASCRIPT
-        if room not in visited:
-          visited[room] = {
-              direction: '?' for direction in player.currentRoom.getExits()}
-        */
 
         for (i = 0; i < new_current_room.exits.length; i++) {
           visited[new_room_id][new_current_room.exits[i]] = '?'
         }
       }
+
       let op_dir = the_other_side(direction)
       visited[new_room_id][op_dir] = this_room_id
       await storage.setItem(`${process.env.NAME}'s-map`, visited)
@@ -156,12 +154,14 @@ async function main() {
       ) {
         for (let item of current_room.items) {
           await callEndpointAfterCD('adv/take', 'post', { name: item })
-          console.log(`💰 Treasure collected \n`)
+          console.log(`💸 Treasure collected \n`)
         }
       }
     } else {
-      // generate a list of directions to get to the nearest unexplored node using a BFS,
-      // loop through and send the player in those directions in order.
+      /*
+      - Generate a list of directions to get to the nearest unexplored room using BFS
+      - Loop through and send the player in those directions in order
+      */
 
       let backwards_movement = traveled.pop()
 
@@ -181,7 +181,7 @@ async function main() {
           ) {
             for (let item of current_room.items) {
               await callEndpointAfterCD('adv/take', 'post', { name: item })
-              console.log(`💰 Treasure collected \n`)
+              console.log(`💸 Treasure collected \n`)
             }
           }
         }
@@ -200,37 +200,24 @@ async function main() {
         JSON.stringify(await storage.getItem(`${process.env.NAME}'s-traveled`))
     )
   }
-
-  // traverse graph
-  //   let current_room = await callEndpointAfterCD('move', 'post', { direction: 'w' })
-  let current_room = await callEndpointAfterCD('adv/init', 'get')
-
-  const player = await callEndpointAfterCD('adv/status', 'post')
-
-  // take all treasures, if available
-  if (current_room.items.length) {
-    for (let item of current_room.items) {
-      await callEndpointAfterCD('adv/take', 'post', { name: item })
-    }
-  }
-
-  // sell all treasures, if player is at a shop
-  if (current_room.title === 'Shop') {
-    for (let i = 0; i < parseInt(player.encumbrance); i++) {
-      await callEndpointAfterCD('adv/sell', 'post', {
-        name: 'treasure',
-        confirm: 'yes'
-      })
-    }
-  }
-
-  // purchase new name, if player is at Pirate Ry's and has at least 1000 gold
-  if (
-    current_room.title.includes('Pirate Ry') &&
-    parseInt(player.gold) >= 1000
-  ) {
-    await callEndpointAfterCD('adv/change_name', 'post', { name: 'divya-ben' })
-  }
 }
 
 main()
+
+// sell all treasures, if player is at a shop
+// if (current_room.title === 'Shop') {
+//   for (let i = 0; i < parseInt(player.encumbrance); i++) {
+//     await callEndpointAfterCD('adv/sell', 'post', {
+//       name: 'treasure',
+//       confirm: 'yes'
+//     })
+//   }
+// }
+
+// purchase new name, if player is at Pirate Ry's and has at least 1000 gold
+// if (
+//   current_room.title.includes('Pirate Ry') &&
+//   parseInt(player.gold) >= 1000
+// ) {
+//   await callEndpointAfterCD('adv/change_name', 'post', { name: 'divya-ben' })
+// }
