@@ -50,8 +50,9 @@ async function main() {
   let traveled = []
   let visited = {}
 
-  console.log(`📏 Visited length: ${Object.keys(visited).length} \n`)
   while (Object.keys(visited).length <= 500) {
+    console.log(`📏 Visited length: ${Object.keys(visited).length} \n`)
+
     let current_room = await callEndpointAfterCD('adv/init', 'get')
 
     let this_room_id = current_room.room_id
@@ -61,7 +62,7 @@ async function main() {
 
     console.log(`🚧 Working on route: ${traveled} \n`)
     if (!(this_room_id in visited)) {
-      visited[this_room_id] = {}
+      visited[this_room_id] = { title: current_room.title }
 
       for (let i = 0; i < current_room.exits.length; i++) {
         visited[this_room_id][current_room.exits[i]] = '?'
@@ -127,11 +128,11 @@ async function main() {
       }
     }
 
-    console.log(`👀 Visited object: ${JSON.stringify(visited)}`)
-    fs.appendFile('map.txt', JSON.stringify(visited), function(err) {
-      if (err) throw err
-      console.log('🔨 File saved! \n')
-    })
+    console.log(`👀 Visited object: ${JSON.stringify(visited)} \n`)
+    // fs.appendFile('map.txt', JSON.stringify(visited), function(err) {
+    //   if (err) throw err
+    //   console.log('🔨 File saved! \n')
+    // })
   }
 
   fs.appendFile('map.json', JSON.stringify(visited), function(err) {
