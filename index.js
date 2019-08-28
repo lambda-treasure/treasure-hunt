@@ -55,25 +55,7 @@ async function callEndpointAfterCD(endpoint, method, data) {
 
 // Main game
 async function main() {
-  await storage.init({
-    dir: 'relative/path/to/persist',
-
-    stringify: JSON.stringify,
-
-    parse: JSON.parse,
-
-    encoding: 'utf8',
-
-    logging: false,  // can also be custom logging function
-
-    ttl: false, // ttl* [NEW], can be true for 24h default or a number in MILLISECONDS or a valid Javascript Date object
-
-    expiredInterval: 2 * 60 * 1000, // every 2 minutes the process will clean-up the expired cache
-
-    // in some cases, you (or some other service) might add non-valid storage files to your
-    // storage dir, i.e. Google Drive, make this true if you'd like to ignore these files and not throw an error
-    forgiveParseErrors: false
-  });
+  await storage.init();
   if (!(await storage.getItem(`${process.env.NAME}'s-traveled`))) {
     await storage.setItem(`${process.env.NAME}'s-traveled`, []);
   }
@@ -264,9 +246,3 @@ async function main() {
 }
 
 main()
-
-// callEndpointAfterCD('adv/status', 'post')
-// callEndpointAfterCD('adv/init', 'get')
-// callEndpointAfterCD('adv/move', 'post', { direction: 'e' })
-// callEndpointAfterCD('adv/take', 'post', { name: 'tiny treasure' })
-// callEndpointAfterCD('adv/sell', 'post', { name: 'treasure', confirm: 'yes' })
