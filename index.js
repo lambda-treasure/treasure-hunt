@@ -43,6 +43,8 @@ function the_other_side(direction_traveled) {
 async function main() {
   let traveled = []
   let visited = {}
+  let unexplored = []
+
   console.log(Object.keys(visited).length + '-----------------------')
   while (Object.keys(visited).length <= 500) {
     let current_room = await callEndpointAfterCD('adv/init', 'get')
@@ -51,6 +53,7 @@ async function main() {
     if (traveled[traveled.length - 1] != this_room_id) {
       traveled.push(this_room_id)
     }
+
     console.log('THIS IS THE ROUTE YOU ARE WORKING ON!!!!!' + traveled)
     if (!(this_room_id in visited)) {
       visited[this_room_id] = {}
@@ -63,12 +66,11 @@ async function main() {
             direction: '?' for direction in player.currentRoom.getExits()}
       */
 
-      for (i = 0; i < current_room.exits.length; i++) {
+      for (let i = 0; i < current_room.exits.length; i++) {
         visited[this_room_id][current_room.exits[i]] = '?'
       }
     }
 
-    let unexplored = []
     //-----------------------------------------------------
     // FOR EACH OF THE EXIT DIRECTIONS IN THE CURRENT ROOM, IF IT IS A '?' (meaning unexplored) ADD IT TO THE UNEXPLORED ARRAY.
     // WE WILL RANDOMLY SELECT ONE OF THESE IN THE NEXT STEP.
@@ -110,7 +112,7 @@ async function main() {
               direction: '?' for direction in player.currentRoom.getExits()}
         */
 
-        for (i = 0; i < new_current_room.exits.length; i++) {
+        for (let i = 0; i < new_current_room.exits.length; i++) {
           visited[new_room_id][new_current_room.exits[i]] = '?'
         }
       }
@@ -166,7 +168,9 @@ async function main() {
     current_room.title.includes('Pirate Ry') &&
     parseInt(player.gold) >= 1000
   ) {
-    await callEndpointAfterCD('adv/change_name', 'post', { name: process.env.NAME })
+    await callEndpointAfterCD('adv/change_name', 'post', {
+      name: process.env.NAME
+    })
   }
 }
 
