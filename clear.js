@@ -4,7 +4,7 @@ async function setUpYourStorage() {
     try {
         await storage.init();
         // // Clear all storage
-        // await storage.clear();
+        await storage.clear();
 
         // // Clear map to zero
         // await storage.removeItem('map');
@@ -14,7 +14,7 @@ async function setUpYourStorage() {
 
 
 
-        await storage.setItem(`Store-Room-ID`, 1);
+        // await storage.setItem(`Store-Room-ID`, 1);
     }
     catch (err) {
         console.error(err)

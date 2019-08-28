@@ -1,4 +1,9 @@
-// Run `node index.js` in your terminal
+/* 
+In your terminal, install packages and run the code:
+
+yarn install
+node index.js
+*/
 
 require('dotenv').config()
 const fetch = require('node-fetch')
@@ -60,16 +65,22 @@ async function main() {
   }
   let visited = await storage.getItem(`${process.env.NAME}'s-map`)
 
-  console.log(`📏 Visited length: ${Object.keys(visited).length} \n`)
   while (Object.keys(visited).length <= 500) {
+    console.log(`📏 Visited length: ${Object.keys(visited).length} \n`)
+
+    const player = await callEndpointAfterCD('adv/status', 'post')
+
     let current_room = await callEndpointAfterCD('adv/init', 'get')
-    // if (current_room.items.length) {
-    //     for (let item of current_room.items) {
-    //         await callEndpointAfterCD('adv/take', 'post', { name: item })
-    //         console.log(`🎁 You picked up ${item}! \n`)
-    //     }
-    // }
-    let this_room_id = current_room.room_id;
+
+    // take all room treasures, if available and player not at max capacity
+    if (current_room.items.length && player.encumbrance < player.strength) {
+      for (let item of current_room.items) {
+        await callEndpointAfterCD('adv/take', 'post', { name: item })
+        console.log(`💸 Treasure collected \n`)
+      }
+    }
+
+    let this_room_id = current_room.room_id
     if (traveled[traveled.length - 1] != this_room_id) {
       traveled.push(this_room_id)
     };
@@ -82,7 +93,7 @@ async function main() {
 
     console.log(`🚧 Working on route: ${traveled} \n`)
     if (!(this_room_id in visited)) {
-      visited[this_room_id] = {};
+      visited[this_room_id] = { title: current_room.title }
 
 
       for (i = 0; i < current_room.exits.length; i++) {
@@ -96,10 +107,11 @@ async function main() {
     /* THIS IS THE PYTHON VERSION
      unexplored = [direction for direction in visited[room]
                 if visited[room][direction] == '?']  */
-    let current_exits = visited[this_room_id];
-    console.log("------ Current exits for this room are: " + JSON.stringify(current_exits));
 
-    let unexplored = [];
+    let unexplored = []
+
+    let current_exits = visited[this_room_id]
+    console.log(`🚪 Current room exits: ${JSON.stringify(current_exits)} \n`)
 
     for (x in visited[this_room_id]) {
       if (visited[this_room_id][x] == '?') {
@@ -116,7 +128,12 @@ async function main() {
       // REQUEST TO TRAVEL IN THAT DIRECTION
       let new_current_room = await callEndpointAfterCD('adv/move', 'post', { "direction": direction })
 
-
+      if (current_room.items.length && player.encumbrance < player.strength) {
+        for (let item of current_room.items) {
+          await callEndpointAfterCD('adv/take', 'post', { name: item })
+          console.log(`💰 Treasure collected \n`)
+        }
+      }
       //-----------------------------------------------------
       // need to get the new new_current_room_id
       let new_room_id = new_current_room.room_id;
@@ -147,9 +164,23 @@ async function main() {
       let backwards_movement = traveled[traveled.length - 1]
 
       for (x in visited[this_room_id]) {
-        if (visited[this_room_id][x] == backwards_movement) {
-          await callEndpointAfterCD('adv/move', 'post', { "direction": x, "next_room_id": JSON.stringify(backwards_movement) })
-          console.log("===============> YOU ARE A VERY WISE TRAVELLER INDEED! <======================")
+        if (visited[this_room_id][x] === backwards_movement) {
+          await callEndpointAfterCD('adv/move', 'post', {
+            direction: x,
+            next_room_id: JSON.stringify(backwards_movement)
+          })
+          console.log(`🧠  Wise traveler \n`)
+
+          // take all room treasures, if available and player not at max capacity
+          if (
+            current_room.items.length &&
+            player.encumbrance < player.strength
+          ) {
+            for (let item of current_room.items) {
+              await callEndpointAfterCD('adv/take', 'post', { name: item })
+              console.log(`💰 Treasure collected \n`)
+            }
+          }
         }
       };
     };
