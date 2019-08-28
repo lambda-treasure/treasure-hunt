@@ -85,11 +85,28 @@ async function main() {
     if (current_room.title.includes('Pirate Ry')) {
       await storage.setItem(`Pirate-Room-ID`, this_room_id)
       console.log(`💖 Pirate Ry room #: ${this_room_id}`)
+
+      // purchase new name, if player is at Pirate Ry's and has at least 1000 gold
+      if (parseInt(player.gold) >= 1000) {
+        await callEndpointAfterCD('adv/change_name', 'post', {
+          name: process.env.NAME
+        })
+        console.log(`🔨 Changed name \n`)
+      }
     }
 
     if (current_room.title.includes('Shop')) {
       await storage.setItem(`Shop-Room-ID`, this_room_id)
       console.log(`💖 Shop room #: ${this_room_id}`)
+
+      // sell all treasures, if player is at the shop
+      for (let i = 0; i < parseInt(player.encumbrance); i++) {
+        await callEndpointAfterCD('adv/sell', 'post', {
+          name: 'treasure',
+          confirm: 'yes'
+        })
+        console.log(`🔨 Sold treasure \n`)
+      }
     }
 
     if (!(this_room_id in visited)) {
@@ -109,14 +126,14 @@ async function main() {
 
     let current_exits = visited[this_room_id]
     await storage.setItem(`${process.env.NAME}'s-map`, visited)
-    console.log(`🚪 Current room exits: ${JSON.stringify(current_exits)} \n`)
+    // console.log(`🚪 Current room exits: ${JSON.stringify(current_exits)} \n`)
 
     for (x in visited[this_room_id]) {
       if (visited[this_room_id][x] === '?') {
         unexplored.push(x)
       }
     }
-    console.log(`🌎 Unexplored exits: ${unexplored} \n`)
+    // console.log(`🌎 Unexplored exits: ${unexplored} \n`)
 
     if (unexplored.length > 0) {
       let direction = unexplored[Math.floor(Math.random() * unexplored.length)]
@@ -131,10 +148,10 @@ async function main() {
       }
 
       await storage.setItem(`${process.env.NAME}'s-traveled`, traveled)
-      console.log(`🚧 Working on route: ${traveled} \n`)
+      // console.log(`🚧 Working on route: ${traveled} \n`)
 
       let new_room_id = new_current_room.room_id
-      console.log(`🎁 New room ID: ${new_room_id} \n`)
+      // console.log(`🎁 New room ID: ${new_room_id} \n`)
 
       visited[this_room_id][direction] = new_room_id
       if (!(new_room_id in visited)) {
@@ -173,6 +190,7 @@ async function main() {
             direction: x,
             next_room_id: JSON.stringify(backwards_movement)
           })
+          // console.log(`🧠 Wise traveler \n`)
 
           // take all room treasures, if available and player not at max capacity
           if (
@@ -195,21 +213,3 @@ async function main() {
 }
 
 main()
-
-// sell all treasures, if player is at a shop
-// if (current_room.title === 'Shop') {
-//   for (let i = 0; i < parseInt(player.encumbrance); i++) {
-//     await callEndpointAfterCD('adv/sell', 'post', {
-//       name: 'treasure',
-//       confirm: 'yes'
-//     })
-//   }
-// }
-
-// purchase new name, if player is at Pirate Ry's and has at least 1000 gold
-// if (
-//   current_room.title.includes('Pirate Ry') &&
-//   parseInt(player.gold) >= 1000
-// ) {
-//   await callEndpointAfterCD('adv/change_name', 'post', { name: 'divya-ben' })
-// }
