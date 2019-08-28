@@ -1,4 +1,9 @@
-// Run `node index.js` in your terminal
+/* 
+In your terminal, install packages and run the code:
+
+yarn install
+node index.js
+*/
 
 require('dotenv').config()
 const fetch = require('node-fetch')
@@ -44,11 +49,21 @@ function the_other_side(direction_traveled) {
 async function main() {
   let traveled = []
   let visited = {}
-  let unexplored = []
 
-  console.log(`📏 Visited length: ${Object.keys(visited).length} \n`)
   while (Object.keys(visited).length <= 500) {
+    console.log(`📏 Visited length: ${Object.keys(visited).length} \n`)
+
+    const player = await callEndpointAfterCD('adv/status', 'post')
+
     let current_room = await callEndpointAfterCD('adv/init', 'get')
+
+    // take all room treasures, if available and player not at max capacity
+    if (current_room.items.length && player.encumbrance < player.strength) {
+      for (let item of current_room.items) {
+        await callEndpointAfterCD('adv/take', 'post', { name: item })
+        console.log(`💸 Treasure collected \n`)
+      }
+    }
 
     let this_room_id = current_room.room_id
     if (traveled[traveled.length - 1] != this_room_id) {
@@ -57,7 +72,7 @@ async function main() {
 
     console.log(`🚧 Working on route: ${traveled} \n`)
     if (!(this_room_id in visited)) {
-      visited[this_room_id] = {}
+      visited[this_room_id] = { title: current_room.title }
 
       for (let i = 0; i < current_room.exits.length; i++) {
         visited[this_room_id][current_room.exits[i]] = '?'
@@ -68,6 +83,8 @@ async function main() {
     - If each exit directions in the current room is '?' (i.e. unexplored), add it to unexplored array
     - Then, randomly select one in the next step
     */
+
+    let unexplored = []
 
     let current_exits = visited[this_room_id]
     console.log(`🚪 Current room exits: ${JSON.stringify(current_exits)} \n`)
@@ -86,6 +103,14 @@ async function main() {
       let new_current_room = await callEndpointAfterCD('adv/move', 'post', {
         direction: direction
       })
+
+      // take all room treasures, if available and player not at max capacity
+      if (current_room.items.length && player.encumbrance < player.strength) {
+        for (let item of current_room.items) {
+          await callEndpointAfterCD('adv/take', 'post', { name: item })
+          console.log(`💰 Treasure collected \n`)
+        }
+      }
 
       let new_room_id = new_current_room.room_id
       console.log(`🎁 New room ID: ${new_room_id} \n`)
@@ -116,34 +141,29 @@ async function main() {
             direction: x,
             next_room_id: JSON.stringify(backwards_movement)
           })
-          console.log(`🧠 Wise traveler \n`)
+          console.log(`🧠  Wise traveler \n`)
+
+          // take all room treasures, if available and player not at max capacity
+          if (
+            current_room.items.length &&
+            player.encumbrance < player.strength
+          ) {
+            for (let item of current_room.items) {
+              await callEndpointAfterCD('adv/take', 'post', { name: item })
+              console.log(`💰 Treasure collected \n`)
+            }
+          }
         }
       }
     }
 
-    console.log(`👀 Visited object: ${JSON.stringify(visited)}`)
-    fs.appendFile('map.txt', JSON.stringify(visited), function(err) {
-      if (err) throw err
-      console.log('🔨 File saved! \n')
-    })
+    console.log(`👀 Visited object: ${JSON.stringify(visited)} \n`)
   }
 
   fs.appendFile('map.json', JSON.stringify(visited), function(err) {
     if (err) throw err
+    console.log('🔨 File saved! \n')
   })
-
-  // traverse graph
-  //   let current_room = await callEndpointAfterCD('move', 'post', { direction: 'w' })
-  // let current_room = await callEndpointAfterCD('adv/init', 'get')
-
-  // const player = await callEndpointAfterCD('adv/status', 'post')
-
-  // take all treasures, if available
-  // if (current_room.items.length) {
-  //   for (let item of current_room.items) {
-  //     await callEndpointAfterCD('adv/take', 'post', { name: item })
-  //   }
-  // }
 
   // sell all treasures, if player is at a shop
   // if (current_room.title === 'Shop') {
