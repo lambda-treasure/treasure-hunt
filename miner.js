@@ -39,20 +39,20 @@ function validate_proof(last_proof, proof, difficulty) {
 async function main() {
   while (true) {
     let last_block = await callEndpointAfterCD('bc/last_proof', 'get')
-    let last_proof = last_block.proof
+    let last_proof = parseInt(last_block.proof)
     let difficulty = last_block.difficulty
     let proof = last_proof
     let is_valid = false
 
     console.log(`🔍 Validating proof`)
     while (!is_valid) {
-      is_valid = validate_proof(last_proof, proof, difficulty)
       proof += 1
+      is_valid = validate_proof(last_proof, proof, difficulty)
     }
     console.log(`✅ Finished validating. Proof is ${proof}`)
 
     let mine = await callEndpointAfterCD('bc/mine', 'post', {
-      proof: `${proof}`
+      proof
     })
 
     if (mine.status === 200) {
