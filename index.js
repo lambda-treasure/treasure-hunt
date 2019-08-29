@@ -89,7 +89,8 @@ async function main() {
       // purchase new name, if player is at Pirate Ry's and has at least 1000 gold
       if (parseInt(player.gold) >= 1000) {
         await callEndpointAfterCD('adv/change_name', 'post', {
-          name: process.env.NAME
+          name: process.env.NAME,
+          confirm: 'aye'
         })
         console.log(`🔨 Changed name \n`)
       }
