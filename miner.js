@@ -1,5 +1,6 @@
 require('dotenv').config()
 const fetch = require('node-fetch')
+const shajs = require('sha.js')
 
 // Helper functions
 function sleep(ms) {
@@ -28,8 +29,10 @@ async function callEndpointAfterCD(endpoint, method, data) {
 }
 
 function validate_proof(last_proof, proof, difficulty) {
-  let guess = encodeURI(`${last_proof}${proof}`)
-  return guess.substring(0, difficulty) === '0'.repeat(difficulty)
+  let hash = shajs('sha256')
+    .update(`${last_proof}${proof}`)
+    .digest('hex')
+  return hash.substring(0, difficulty) === '0'.repeat(difficulty)
 }
 
 // Miner
@@ -38,7 +41,7 @@ async function main() {
     let last_block = await callEndpointAfterCD('bc/last_proof', 'get')
     let last_proof = last_block.proof
     let difficulty = last_block.difficulty
-    let proof = 1000
+    let proof = last_proof
     let is_valid = false
 
     console.log(`🔍 Validating proof`)
