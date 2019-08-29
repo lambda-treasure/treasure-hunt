@@ -20,6 +20,7 @@
   "dependencies": {
     "dotenv": "^8.1.0",
     "node-fetch": "^2.6.0",
-    "node-persist": "^3.0.5"
+    "node-persist": "^3.0.5",
+    "sha.js": "^2.4.11"
   }
 }

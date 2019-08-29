@@ -270,7 +270,7 @@ Submit a proposed proof and your game token to this endpoint to attempt to mine 
 
 
 `
-curl -X POST -H 'Authorization: Token 7a375b52bdc410eebbc878ed3e58b2e94a8cb607' -H "Content-Type: application/json" -d '{"proof":"[new_proof]"}' https://lambda-treasure-hunt.herokuapp.com/api/bc/mine/
+curl -X POST -H 'Authorization: Token 7a375b52bdc410eebbc878ed3e58b2e94a8cb607' -H "Content-Type: application/json" -d '{"proof":new_proof}' https://lambda-treasure-hunt.herokuapp.com/api/bc/mine/
 `
 
 ## Proof
