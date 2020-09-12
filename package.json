@@ -19,7 +19,7 @@
   "homepage": "https://github.com/lambda-treasure/treasure-hunt#readme",
   "dependencies": {
     "dotenv": "^8.1.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "node-persist": "^3.0.5",
     "sha.js": "^2.4.11"
   }
